@@ -1,0 +1,313 @@
+<p-toast />
+<p-confirmDialog />
+<div class="card">
+  <p-toolbar styleClass="mb-4 gap-2">
+    <ng-template pTemplate="left">
+      <p-button pRipple severity="success" label="Crear persona" icon="pi pi-plus" class="mr-2"
+        (onClick)="abrirModalCrearPersonaDialog()" />
+    </ng-template>
+  </p-toolbar>
+
+  <p-table #dt [value]="listadoPersonasCreadas" [rows]="10" [paginator]="true" [globalFilterFields]="[
+  'primerNombre',
+  'segundoNombre',
+  'primerApellido',
+  'segundoApellido',
+  'edadPersona',
+]" [tableStyle]="{ 'min-width': '50rem' }" [rowHover]="true" dataKey="id"
+    currentPageReportTemplate="mostrando {first} a {last} de {totalRecords} personas." [showCurrentPageReport]="true">
+    <ng-template pTemplate="caption">
+      <div class="flex align-items-center justify-content-between">
+        <h5 class="m-0">Listado de personas creadas.</h5>
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input pInputText type="text" (input)="applyFilterGlobal($event, 'contains')"
+            placeholder="Buscar persona..." />
+        </span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="primerNombre" style="min-width: 15rem">
+          Primer nombre<p-sortIcon field="primerNombre" />
+        </th>
+        <th pSortableColumn="segundoNombre" style="min-width: 15rem">
+          Segundo nombre <p-sortIcon field="segundoNombre" />
+        </th>
+
+        <th pSortableColumn="primerApellido " style="min-width: 15rem">
+          Primer apellido <p-sortIcon field="primerApellido" />
+        </th>
+
+        <th pSortableColumn="segundoApellido" style="min-width: 15rem">
+          Segundo apellido <p-sortIcon field="segundoApellido" />
+        </th>
+        <th pSortableColumn="edadPersona" style="min-width: 15rem">
+          Edad de la persona<p-sortIcon field="edadPersona" />
+        </th>
+
+        <th pSortableColumn="Gestionar" style="min-width: 10rem">
+          Gestionar <p-sortIcon field="Gestionar" />
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-persona>
+      <tr>
+        <td>
+          {{ persona.primerNombre }}
+        </td>
+        <td>
+          {{ persona.segundoNombre}}
+        </td>
+
+        <td>
+          {{ persona.primerApellido}}
+        </td>
+
+        <td>
+          {{ persona.segundoApellido}}
+        </td>
+
+        <td>
+          {{ persona.edadPersona }} años.
+        </td>
+
+        <td>
+          <p-button pRipple icon="pi pi-pencil" pTooltip="Editar persona" class="m-1 mr-2" [rounded]="true"
+            [outlined]="true" severity="success" (click)="abrirModalEditarPersona(persona)" />
+          <p-button pRipple icon="pi pi-eye" pTooltip="Detalle de la persona"
+            (click)="abrirModalVerDetallePersona(persona)" severity="primary" [rounded]="true" [outlined]="true"
+            class="m-1" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="summary">
+      <div class="flex align-items-center justify-content-between">
+        En total se han registrado
+        {{ listadoPersonasCreadas ? listadoPersonasCreadas.length : 0 }} personas.
+      </div>
+    </ng-template>
+  </p-table>
+
+
+  <p-dialog [(visible)]="crearPersonaDialog" [style]="{ width: '900px', height: '900px' }" header="Crear Persona"
+    [modal]="true" styleClass="p-fluid" [maximizable]="true">
+    <ng-template pTemplate="content">
+      <form [formGroup]="formGroupPersona">
+        <div class="formgrid grid">
+
+          <div class="field col">
+            <label for="primerNombre">Ingrese el primer nombre de la persona</label>
+            <input type="text" pInputText id="primerNombre" required formControlName="primerNombre" />
+
+          </div>
+
+          <div class="field col">
+            <label for="segundoNombre">Ingrese el segundo nombre de la persona (Opcional)</label>
+            <input type="text" pInputText id="segundoNombre" formControlName="segundoNombre" />
+          </div>
+        </div>
+
+        <div class="formgrid grid">
+          <div class="field col">
+            <label for="primerApellido">Ingrese el primer apellido de la persona</label>
+            <input type="text" pInputText id="primerApellido" required formControlName="primerApellido" />
+            <div *ngIf="formGroupPersona.hasError('nombreDuplicado') && formGroupPersona.get('primerNombre')?.touched">
+              <small class="p-error">Este nombre y apellido ya están registrados.</small>
+            </div>
+          </div>
+
+          <div class="field col">
+            <label for="segundoApellido">Ingrese el segundo apellido de la persona (Opcional)</label>
+            <input type="text" pInputText id="segundoApellido" formControlName="segundoApellido" />
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label for="edadPersona">Ingrese la edad de la persona (minimo 18 años)</label>
+          <p-inputNumber inputId="edadPersona" formControlName="edadPersona" suffix=" años" [minlength]="2"
+            [maxlength]="3"  [max]="150" [useGrouping]="false" />
+        </div>
+
+        <div class="field">
+          <div class="flex flex-column justify-content-center">
+            <ng-container formArrayName="habilidades">
+              <ng-container
+                *ngFor="let habilidad of formGroupPersona.controls.habilidades.controls;let indexHabilidad= index ">
+                <div [formGroup]="habilidad">
+                  <div class="field">
+                    <label for="nombreHabilidad">Ingrese el nombre de la Habilidad Nº {{indexHabilidad +1}} </label>
+                    <input type="text" pInputText formControlName="nombreHabilidad" />
+                  </div>
+
+
+                  <ng-container *ngIf="indexHabilidad > 0">
+                    <div class="field">
+                      <div class="flex justify-content-center ">
+                        <p-button pRipple icon="pi pi-trash" label="Eliminar Habilidad" severity="danger"
+                          (click)="eliminarHabilidad(indexHabilidad)"></p-button>
+                      </div>
+                    </div>
+                  </ng-container>
+
+
+                </div>
+              </ng-container>
+
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="flex justify-content-center ">
+            <p-button pRipple icon="pi pi-plus" label="Añadir habilidad" (click)="addHabilidad()"
+              severity="primary"></p-button>
+          </div>
+        </div>
+
+
+      </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" severity="danger" (click)="confirmarCancelacionCreacionPersona()" icon="pi pi-times" />
+      <p-button label="Crear Persona" icon="pi pi-save" (click)="guardarPersona()"
+        [disabled]="!formGroupPersona.valid" />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog [(visible)]="editarPersonaDialog" [style]="{ width: '900px', height: '900px' }" header="Editar Persona"
+    [modal]="true" styleClass="p-fluid" [maximizable]="true">
+    <ng-template pTemplate="content">
+      <form [formGroup]="formGroupPersona">
+        <div class="formgrid grid">
+
+          <div class="field col">
+            <label for="primerNombre">Ingrese el primer nombre de la persona</label>
+            <input type="text" pInputText id="primerNombre" required formControlName="primerNombre" />
+          </div>
+
+          <div class="field col">
+            <label for="segundoNombre">Ingrese el segundo nombre de la persona (Opcional)</label>
+            <input type="text" pInputText id="segundoNombre" formControlName="segundoNombre" />
+          </div>
+        </div>
+
+        <div class="formgrid grid">
+          <div class="field col">
+            <label for="primerApellido">Ingrese el primer apellido de la persona</label>
+            <input type="text" pInputText id="primerApellido" required formControlName="primerApellido" />
+          </div>
+
+          <div class="field col">
+            <label for="segundoApellido">Ingrese el segundo apellido de la persona (Opcional)</label>
+            <input type="text" pInputText id="segundoApellido" formControlName="segundoApellido" />
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label for="edadPersona">Ingrese la edad de la persona (minimo 18 años)</label>
+          <p-inputNumber inputId="edadPersona" formControlName="edadPersona" suffix=" años" [minlength]="2"
+            [maxlength]="3" [min]="18" [max]="150" [useGrouping]="false" />
+        </div>
+
+        <div class="field">
+          <div class="flex flex-column justify-content-center">
+            <ng-container formArrayName="habilidades">
+              <ng-container
+                *ngFor="let habilidad of formGroupPersona.controls.habilidades.controls;let indexHabilidad= index ">
+                <div [formGroup]="habilidad">
+                  <div class="field">
+                    <label for="nombreHabilidad">Ingrese el nombre de la Habilidad Nº {{indexHabilidad +1}} </label>
+                    <input type="text" pInputText formControlName="nombreHabilidad" />
+                  </div>
+
+
+                  <ng-container *ngIf="indexHabilidad > 0">
+                    <div class="field">
+                      <div class="flex justify-content-center ">
+                        <p-button pRipple icon="pi pi-trash" label="Eliminar Habilidad" severity="danger"
+                          (click)="eliminarHabilidad(indexHabilidad)"></p-button>
+                      </div>
+                    </div>
+                  </ng-container>
+
+
+                </div>
+              </ng-container>
+
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="flex justify-content-center ">
+            <p-button pRipple icon="pi pi-plus" label="Añadir habilidad" (click)="addHabilidad()"
+              severity="primary"></p-button>
+          </div>
+        </div>
+
+
+      </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" (click)="confirmarCancelacionCreacionPersona()" severity="danger" icon="pi pi-times" />
+      <p-button label="editar Persona" icon="pi pi-save"
+        (click)="editarPersona(this.formGroupPersona.controls.idPersona.value)" [disabled]="!formGroupPersona.valid" />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog [(visible)]="verDetallePersonaDialog" [style]="{ width: '900px', height: '900px' }"
+    header="Ver detalle de la Persona" [modal]="true" styleClass="p-fluid" [maximizable]="true">
+    <ng-template pTemplate="content">
+      <div class="formgrid grid">
+
+        <div class="field col">
+          <h5>Primer nombre de la persona</h5>
+          <p> {{personaSeleccionada.primerNombre}} </p>
+        </div>
+
+        <div class="field col">
+          <h5>segundo nombre de la persona (Si aplica)</h5>
+          <p> {{personaSeleccionada.segundoNombre}} </p>
+        </div>
+      </div>
+
+      <div class="formgrid grid">
+        <div class="field col">
+          <h5>Primer apellido de la persona</h5>
+          <p> {{personaSeleccionada.primerApellido}} </p>
+        </div>
+
+        <div class="field col">
+          <h5>Segundo apellido de la persona (Si aplica)</h5>
+          <p> {{personaSeleccionada.segundoApellido}} </p>
+        </div>
+
+      </div>
+      <div class="formgrid grid">
+        <div class="field col">
+          <h5>Edad de la persona</h5>
+          <p> {{personaSeleccionada.edadPersona}} años. </p>
+        </div>
+
+        <div class="field col">
+          <h5>Habilidades de las persona</h5>
+          <ol type="1">
+            <ng-container *ngFor="let habilidad of personaSeleccionada.habilidades">
+              <li>{{habilidad.nombreHabilidad}}</li>
+            </ng-container>
+          </ol>
+        </div>
+
+      </div>
+
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Aceptar" severity="success" (click)="verDetallePersonaDialog = false" icon="pi pi-check" />
+    </ng-template>
+  </p-dialog>
+
+</div>

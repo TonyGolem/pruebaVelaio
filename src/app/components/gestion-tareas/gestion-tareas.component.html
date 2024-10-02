@@ -1,0 +1,193 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="card">
+  <p-toolbar styleClass="mb-4 gap-2">
+    <ng-template pTemplate="left">
+      <p-button pRipple severity="success" label="Crear Tarea" icon="pi pi-plus" class="mr-2"
+        (onClick)="abrirModalCrearTareaDialog()" />
+    </ng-template>
+  </p-toolbar>
+
+
+  <p-table #dt [value]="listadoTareasCreadas" [rows]="10" [paginator]="true" [globalFilterFields]="[
+  'nombreTarea',
+  'estadoTarea',
+  'fechaLimiteTarea'
+]" [tableStyle]="{ 'min-width': '50rem' }" [rowHover]="true" dataKey="id"
+    currentPageReportTemplate="mostrando {first} a {last} de {totalRecords} tareas." [showCurrentPageReport]="true">
+    <ng-template pTemplate="caption">
+      <div class="flex align-items-center justify-content-between">
+        <h5 class="m-0">Listado de tareas creadas.</h5>
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input pInputText type="text" (input)="applyFilterGlobal($event, 'contains')" placeholder="Buscar Tarea..." />
+        </span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="nombreTarea" style="min-width: 15rem">
+          Nombre de la tarea<p-sortIcon field="nombreTarea" />
+        </th>
+        <th pSortableColumn="estadoTarea" style="min-width: 15rem">
+          estado de la tarea <p-sortIcon field="estadoTarea" />
+        </th>
+
+        <th pSortableColumn="fechaLimiteTarea " style="min-width: 15rem">
+          Fecha límite de finalización de la tarea <p-sortIcon field="fechaLimiteTarea" />
+        </th>
+
+        <th pSortableColumn="Gestionar" style="min-width: 10rem">
+          Gestionar <p-sortIcon field="Gestionar" />
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-tarea>
+      <tr>
+        <td>
+          {{ tarea.nombreTarea }}
+        </td>
+
+        <td>
+          <p-tag [severity]="estadoRealizacionTarea(tarea)" [value]="estadoTarea(tarea)" />
+        </td>
+
+        <td>
+          {{ tarea.fechaLimiteTarea}}
+        </td>
+        <td>
+
+          <ng-container *ngIf="tarea.estadoTarea =='pendiente'; else tareaCompletada">
+            <p-button pRipple icon="pi pi-check" pTooltip="Completar tarea" class="m-1 mr-2" [rounded]="true"
+              [outlined]="true" severity="success" (click)="marcarTareaCompletada(tarea)" />
+          </ng-container>
+          <ng-template #tareaCompletada>
+
+          </ng-template>
+
+          <!-- ? no me dió el tiempo para hacer el editar tarea😣, perdon! -->
+          <!-- <p-button pRipple icon="pi pi-pencil" pTooltip="Editar tarea" class="m-1 mr-2" [rounded]="true"
+            [outlined]="true" severity="warning" /> -->
+          <p-button pRipple icon="pi pi-eye" pTooltip="Detalle de la tarea" severity="info" [rounded]="true"
+            [outlined]="true" class="m-1" (click)="abrirDetalleTareaDialog(tarea)" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="summary">
+      <div class="flex align-items-center justify-content-between">
+        En total se han registrado
+        {{ listadoTareasCreadas ? listadoTareasCreadas.length : 0 }} tareas.
+      </div>
+    </ng-template>
+  </p-table>
+
+
+  <p-dialog [(visible)]="crearTareaDialog" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [style]="{ width: '900px', height: '900px' }" header="Crear Tarea" [modal]="true" styleClass="p-fluid"
+    [maximizable]="true">
+    <ng-template pTemplate="content">
+      <form [formGroup]="formGroupTarea">
+        <div class="formgrid grid">
+
+          <div class="field col">
+            <label for="nombreTarea">Ingrese el nombre de la tarea</label>
+            <input type="text" pInputText id="nombreTarea" placeholder="Nombre de la tarea"
+              formControlName="nombreTarea" />
+
+          </div>
+
+          <div class="field col">
+            <label for="nombreTarea">Ingrese la fecha límite de finalización de la tarea</label>
+            <p-calendar dateFormat="yy-mm-dd" placeholder="seleccione la fecha límite de la tarea"
+              (onSelect)="asignarFormatoFechaInicioSeleccionada($event)" inputId="fechaLimiteTarea" [showIcon]="true"
+              formControlName="fechaLimiteTarea" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="edadPersona">Seleccione las personas asociadas a la tarea</label>
+
+          <p-multiSelect [options]="listadoPersonasCreadas" placeholder="seleccione el/las personas a asignar"
+            optionLabel="primerNombre" filterPlaceHolder="Buscar persona..."
+            (onChange)="actualizarPersonasAsignadas($event.value)">
+            <ng-template let-value pTemplate="selectedItems">
+              <div class="inline-flex align-items-center gap-2 px-1" *ngFor="let option of value">
+                <div>{{ option.primerNombre }} {{option.primerApellido}} </div>
+              </div>
+              <div *ngIf="!value || value.length === 0">seleccione la(s) persona(s) a asignar</div>
+            </ng-template>
+            <ng-template let-persona pTemplate="item">
+              <div class="flex align-items-center gap-2">
+                <div>{{ persona.primerNombre }} {{ persona.primerApellido }} </div>
+              </div>
+            </ng-template>
+          </p-multiSelect>
+        </div>
+
+      </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" severity="danger" (click)="confirmarCancelacionCreacionTarea()" icon="pi pi-times" />
+      <p-button label="Crear Tarea" icon="pi pi-save" (click)="crearTarea()" [disabled]="!formGroupTarea.valid" />
+    </ng-template>
+  </p-dialog>
+
+
+  <p-dialog header="Información detallada de la tarea" [(visible)]="infoDetalladaTareaDialog" [modal]="true"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '90vw' }" [draggable]="false"
+    [resizable]="false" styleClass="p-fluid">
+
+    <ng-template pTemplate="content">
+      <div class="formgrid grid">
+
+        <div class="field col">
+          <h5>Nombre de la tarea</h5>
+          <p> {{tareaSeleccionada.nombreTarea}} </p>
+
+        </div>
+
+        <div class="field col">
+          <h5>Estado de la tarea</h5>
+          <p> {{tareaSeleccionada.estadoTarea}} </p>
+        </div>
+
+        <div class="field col">
+          <h5>Fecha límite de finalización de la tarea</h5>
+          <p> {{tareaSeleccionada.fechaLimiteTarea}} </p>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flex flex-column justify-content-center align-items-center">
+          <h5>Personas asociadas a la tarea</h5>
+
+          <ng-container *ngFor="let persona of informacionPersonasAsociadas">
+            <p-accordion>
+              <p-accordionTab
+                [header]="persona.primerNombre + ' ' + persona.segundoNombre + ' ' + persona.primerApellido+ ' ' + persona.segundoApellido">
+                <p> <strong>Edad: </strong> {{persona.edadPersona}} años.</p>
+
+                <ol type="1">
+                  <strong>Habilidades:</strong>
+                  <ng-container *ngFor="let habilidad of persona.habilidades">
+                    <li>{{habilidad.nombreHabilidad}}</li>
+                  </ng-container>
+                </ol>
+              </p-accordionTab>
+            </p-accordion>
+          </ng-container>
+
+        </div>
+      </div>
+
+
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Aceptar" (click)="infoDetalladaTareaDialog = false" icon="pi pi-check" />
+    </ng-template>
+
+  </p-dialog>
+
+</div>
